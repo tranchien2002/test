@@ -105,7 +105,7 @@ export default function Navbar() {
             <NavCenter>
                 <TitleLogo>
                         <Img src={ethLogo} alt='ethereum logo' />
-                        <H1> Coinflip dApp </H1>
+                        <H1> Coin Flip Flop </H1>
                 </TitleLogo>
                 <Div>
                     <NetworkDiv>
