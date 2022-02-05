@@ -1,162 +1,67 @@
-pragma solidity =0.5.16;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
 
-import './provableAPI_0.5.sol';
-import './SafeMath.sol';
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-contract Coinflip is usingProvable {
-    using SafeMath for uint;
-    
-    struct Bet {
-        address playerAddress;
-        uint betValue;
-        uint headsTails;
-        uint setRandomPrice;
+contract coinflip is VRFConsumerBase {
+    bytes32 internal keyHash;
+    uint256 internal fee;
+    address payable owner;
+    uint256 public randomResult;
+    uint256 public bet;
+    uint256 public minimumBet = 1000000000000000;
+    address payable public player;
+    event Roll(address indexed, uint256 indexed, bool indexed);
+    event Deposit(address indexed, uint256 indexed);
+    event Withdraw(address indexed, uint256 indexed);
+
+    constructor()
+        VRFConsumerBase(
+            0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B, // VRF Coordinator
+            0x01BE23585060835E02B77ef475b0Cc51aA1e0709 // LINK Token
+        )
+    {
+        keyHash = 0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311;
+        fee = 0.1 * 10**18; // 0.1 LINK (Varies by network)
+        owner = payable(msg.sender);
     }
-    
-    mapping(address => uint) public playerWinnings;
-    mapping (address => Bet) public waiting;
-    mapping (bytes32 => address) public afterWaiting;
-    
-    event logNewProvableQuery(string description);
-    event sentQueryId(address caller, bytes32 indexed queryId);
-    event callbackReceived(bytes32 indexed queryId, string description, uint256 amount);
-    event userWithdrawal(address indexed caller, uint256 amount);
 
-    uint public contractBalance;
-    
-    uint256 constant GAS_FOR_CALLBACK = 200000;
-    uint256 constant NUM_RANDOM_BYTES_REQUESTED = 1;
-    
-    address payable public owner = msg.sender;
-   
-    bool public freeCallback = true;
-
-    constructor() public payable{
-        owner = msg.sender;
-        contractBalance = msg.value;
+    function deposit() public payable {
+        emit Deposit(msg.sender, msg.value);
     }
-    
-    modifier onlyOwner() {
+
+    function withdraw(uint256 amount) public payable {
         require(msg.sender == owner);
-        _;
+        require(amount <= address(this).balance);
+        owner.transfer(amount);
+        emit Withdraw(msg.sender, amount);
     }
-    
-    /**
-    *@notice This function simulates a coin flip which makes a call to the Provable oracle for 
-    *        a random number.
-    *@dev The function first checks if this is the very first call to the Provable oracle in order 
-    *     for the user to not pay for the first free call. This also adds user values to two different 
-    *     mappings: 'waiting' and 'afterWaiting.' Both mappings are necessary in order to bridge the 
-    *     user's address (which we has access to here with msg.sender) and the user's queryId sent from 
-    *     Provable after the function call. 
-    *
-    *@param oneZero - The numerical value of heads(0) or tails(1)
-     */
 
-    function flip(uint256 oneZero) public payable {
-        require(contractBalance > msg.value, "We don't have enough funds");
-        uint256 randomPrice;
-
-        if(freeCallback == false){
-            randomPrice = getQueryPrice();
-        } else {
-            freeCallback = false;
-            randomPrice = 0;
+    function roll(uint256 _headsOrTails) public payable {
+        player = payable(msg.sender);
+        bet = msg.value;
+        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK");
+        require(bet >= minimumBet, "Bet must be at least 1000000000000000 wei");
+        require(address(this).balance > bet);
+        requestRandomness(keyHash, fee);
+        uint256 generatedRandomNumber = (uint256(
+            keccak256(abi.encodePacked(randomResult))
+        ) % 2) + 1;
+        if (_headsOrTails == generatedRandomNumber) {
+            player.transfer(bet);
+            player.transfer(bet);
+            emit Roll(player, bet, true);
         }
 
-        uint256 QUERY_EXECUTION_DELAY = 0;
-        bytes32 queryId = provable_newRandomDSQuery(
-            QUERY_EXECUTION_DELAY,
-            NUM_RANDOM_BYTES_REQUESTED,
-            GAS_FOR_CALLBACK
-            );
-        emit logNewProvableQuery("Message sent. Waiting for an answer...");
-        emit sentQueryId(msg.sender, queryId);
-
-        afterWaiting[queryId] = msg.sender;
-
-        Bet memory newBetter;
-        newBetter.playerAddress = msg.sender;
-        newBetter.betValue = msg.value; 
-        newBetter.headsTails = oneZero;
-        newBetter.setRandomPrice = randomPrice;
-        
-        waiting[msg.sender] = newBetter;
-    }
-    
-    function __callback(bytes32 _queryId, string memory _result) public {
-        require(msg.sender == provable_cbAddress());
-        
-        //turn number into 1 or 0
-        uint256 flipResult = SafeMath.mod(uint256(keccak256(abi.encodePacked(_result))), 2);
-
-        //linking new mapping with new struct
-        address _player = afterWaiting[_queryId];
-        
-        Bet memory postBet = waiting[_player];
-
-    
-        if(flipResult == postBet.headsTails){
-            //winner
-            uint winAmount = SafeMath.sub(SafeMath.mul(postBet.betValue, 2), postBet.setRandomPrice); 
-            contractBalance = SafeMath.sub(contractBalance, postBet.betValue);
-            playerWinnings[_player] = SafeMath.add(playerWinnings[_player], winAmount);
-           
-            /**
-            *         @notice The following commented commands mirror the above commands sans SafeMath for readability.
-            *          
-            *          uint winAmount = (postBet.betValue * 2) - postBet.setRandomPrice;
-            *          contractBalance -= postBet.betValue;
-            *          playerWinnings[_player] += winAmount;
-             */
-
-            emit callbackReceived(_queryId, "Winner", postBet.betValue);
-        } else {
-            //loser
-            contractBalance = SafeMath.add(contractBalance, SafeMath.sub(postBet.betValue, postBet.setRandomPrice));
-            /**
-            *           @notice For readability--see previous comment.
-            *
-            *          contractBalance += (postBet.betValue - postBet.setRandomPrice);
-             */
-            emit callbackReceived(_queryId, "Loser", postBet.betValue);
+        if (_headsOrTails == generatedRandomNumber) {
+            emit Roll(player, bet, false);
         }
     }
-    
-    //combine gas and randomTx fee
-    function getQueryPrice() internal returns(uint256 _price) {
-        _price = provable_getPrice("price", GAS_FOR_CALLBACK);
-    }
-    
-    
-    function withdrawUserWinnings() public {
-        require(playerWinnings[msg.sender] > 0, "No funds to withdraw");
-        uint toTransfer = playerWinnings[msg.sender];
-        playerWinnings[msg.sender] = 0;
-        msg.sender.transfer(toTransfer);
-        emit userWithdrawal(msg.sender, toTransfer);
-    }
-    
-    function getWinningsBalance() public view returns(uint){
-        return playerWinnings[msg.sender];
-    }
-    
-    /**
-    *@notice The following functions are reserved for the owner of the contract.
-     */
-    
-    function fundContract() public payable onlyOwner {
-        contractBalance = SafeMath.add(contractBalance, msg.value);
-    }
-    
-    function fundWinnings() public payable onlyOwner {
-        playerWinnings[msg.sender] = SafeMath.add(playerWinnings[msg.sender], msg.value);
-    }
-    
-    function withdrawAll() public onlyOwner {
-        uint toTransfer = contractBalance;
-        contractBalance = 0;
-        msg.sender.transfer(toTransfer);
-    }
 
+    function fulfillRandomness(bytes32 requestId, uint256 randomness)
+        internal
+        override
+    {
+        randomResult = randomness;
+    }
 }

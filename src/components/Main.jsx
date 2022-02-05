@@ -31,30 +31,30 @@ const AlignHalf = styled.div`
  * @notice The necessary data required for the dApp.
  */
 const web3 = new Web3(Web3.givenProvider)
-const contractAddress = '0x0308c3A32E89cC7E294D07D4f356ad6b90dDd8E9'
+const contractAddress = '0x39E42A434E62529Ea341Cf938e2DAfBBce5Aa688'
 const coinflip = new web3.eth.Contract(Coinflip.abi, contractAddress)
 
 
 export default function Main() {
 
     //fetching user context
-    const { 
-        userAddress, 
+    const {
+        userAddress,
         setUserAddress,
-        userBalance, 
+        userBalance,
         setUserBalance,
         winningsBalance,
         setWinningsBalance,
     } = useUser();
-    
+
 
     //fetching contract context
     const  {
         contractBalance,
         setContractBalance,
         owner,
-        setOwner, 
-        setIsOwner, 
+        setOwner,
+        setIsOwner,
         network,
         setNetwork,
         sentQueryId,
@@ -89,11 +89,11 @@ export default function Main() {
      */
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [outcomeMessage, setOutcomeMessage] = useState('');
-   
-    
+
+
     /**
      * @notice The following functions fetch both the user's Ethereum data and
-     *         contract data. 
+     *         contract data.
      */
 
     const loadUserAddress = useCallback(async() => {
@@ -123,8 +123,8 @@ export default function Main() {
         setOwner(theOwner)
         return theOwner
     }, [setOwner])
-    
-    
+
+
     /**
      * @notice This function mimics the late React approach of componentDidMount; 
      *         where, this acts as an initialization of the dApp by fetching the
@@ -147,7 +147,7 @@ export default function Main() {
 
     /**
      * @notice This hook acts as an initializer a la componentDidMount. 
-     *         
+     *
      */
     useEffect(() => {
        // if(userAddress === ''){

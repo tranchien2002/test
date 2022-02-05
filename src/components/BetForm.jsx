@@ -92,9 +92,9 @@ export default function BetForm(props) {
                     {`Balance:\xa0 ${userBalance}`}
                 </Balance>
             </TopAlign>
-                    
+
             <BottomAlign>
-                <Input 
+                <Input
                     placeholder='0.0'
                     onChange={handleBetInput}
                 />
@@ -102,10 +102,10 @@ export default function BetForm(props) {
                     ETH
                 </Ether>
             </BottomAlign>
-            
+
         </Circle>
 
-        <HeadsTails 
+        <HeadsTails
             betAmt={betAmt}
             flipTheCoin={flipCoin}
         />
