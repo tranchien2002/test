@@ -70,7 +70,7 @@ export default function BetForm(props) {
         userBalance
     } = useUser()
 
-    const [betAmt, setBetAmt] = useState('0');
+    const [betAmt, setBetAmt] = useState('0.01');
 
     const handleBetInput = (event) => {
         setBetAmt(event.target.value)
@@ -95,7 +95,8 @@ export default function BetForm(props) {
 
             <BottomAlign>
                 <Input
-                    placeholder='0.0'
+                    value={betAmt}
+                    disabled
                     onChange={handleBetInput}
                 />
                 <Ether>

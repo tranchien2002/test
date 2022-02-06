@@ -69,7 +69,7 @@ export default function UserButton(props) {
 
     return (
         <>
-            <Line/>
+            {/* <Line/>
             <AlignText>
                 <Text>
                     Your Winnings: 
@@ -82,7 +82,7 @@ export default function UserButton(props) {
                 <Text2>
                     Withdraw
                 </Text2>
-            </WithdrawButton>
+            </WithdrawButton> */}
         </>
     )
 }
