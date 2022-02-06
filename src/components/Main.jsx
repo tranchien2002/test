@@ -31,7 +31,7 @@ const AlignHalf = styled.div`
  * @notice The necessary data required for the dApp.
  */
 const web3 = new Web3(Web3.givenProvider)
-const contractAddress = '0x39E42A434E62529Ea341Cf938e2DAfBBce5Aa688'
+const contractAddress = '0x5CB7EfA5C5CbdE2023E1DeF4f42282b51bd35089'
 const coinflip = new web3.eth.Contract(Coinflip.abi, contractAddress)
 
 
@@ -114,7 +114,7 @@ export default function Main() {
 
     const loadWinningsBalance = useCallback(async(userAdd) => {
         let config = {from: userAdd}
-        let bal = await coinflip.methods.getWinningsBalance().call(config)
+        let bal = '1000000000000000';
         setWinningsBalance(Number.parseFloat(web3.utils.fromWei(bal)).toPrecision(3));
     }, [setWinningsBalance])
 
@@ -208,7 +208,7 @@ export default function Main() {
             value: web3.utils.toWei(betAmt, 'ether'),
             from: userAddress
         }
-        coinflip.methods.flip(guess).send(config)
+        coinflip.methods.roll(guess).send(config)
         .on('receipt', function(receipt){
             setSentQueryId(receipt.events.sentQueryId.returnValues[1])
             setAwaitingCallbackResponse(true)

@@ -64,7 +64,7 @@ export default function HeadsTails(props) {
         if(props.betAmt <= .008){
             alert('Bets must be higher than .008 ETH')
         } else {
-        let guess = 0
+        let guess = 1
         let bet = props.betAmt
         props.flipTheCoin(guess, bet)
         }
@@ -74,7 +74,7 @@ export default function HeadsTails(props) {
         if(props.betAmt <= .008){
             alert('Bets must be higher than .008 ETH')
         } else {
-        let guess = 1
+        let guess = 2
         let bet = props.betAmt
         props.flipTheCoin(guess, bet)
         }
