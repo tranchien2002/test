@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import ethLogo from '../assets/ethLogo.png'
+import { connectWeb3Modal } from '../utils/connect';
 
 import { useUser } from '../context/UserContext'
 import { useContract }  from '../context/ContractContext'
@@ -93,6 +94,10 @@ export default function Navbar() {
         network
     } = useContract()
 
+    const connectWallet = async () => {
+        let account = await connectWeb3Modal();
+    };
+
     const address = userAddress ? userAddress.slice(0, 5) + '...' + userAddress.slice(37, 42) : null
     
     return (
@@ -109,7 +114,7 @@ export default function Navbar() {
                     <Circle >
                          { userBalance } ETH
                             <CircleTwo>
-                                {address}
+                                {address ? (address) : (<button onClick={connectWallet}>Connect</button>)}
                             </CircleTwo>
                     </Circle>
                 </Div>
