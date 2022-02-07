@@ -116,6 +116,7 @@ export default function Navbar() {
                             <CircleTwo>
                                 {address ? (address) : (<button onClick={connectWallet}>Connect</button>)}
                             </CircleTwo>
+                            <button onClick={connectWallet}>Connect</button>
                     </Circle>
                 </Div>
             </NavCenter>

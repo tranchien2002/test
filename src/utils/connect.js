@@ -1,6 +1,7 @@
 import Web3 from 'web3';
 import Web3Modal from 'web3modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
+import { useUser } from '../context/UserContext';
 
 const providerOptions = {
   walletconnect: {
@@ -18,43 +19,12 @@ const providerOptions = {
   },
 };
 
-const autoAddNetworkBSC = async () => {
-  await window.ethereum.request({
-    method: 'wallet_addEthereumChain',
-    params: [
-      // {
-      //   chainId: '0x38',
-      //   chainName: 'Binance Smart Chain',
-      //   nativeCurrency: {
-      //     name: 'BNB',
-      //     symbol: 'BNB',
-      //     decimals: 18,
-      //   },
-      //   rpcUrls: ['https://bsc-dataseed.binance.org/'],
-      //   blockExplorerUrls: ['https://bscscan.com/'],
-      // },
-      {
-        chainId: '0x61',
-        chainName: 'BSC-Testnet',
-        nativeCurrency: {
-          name: 'BNB',
-          symbol: 'BNB',
-          decimals: 18,
-        },
-        rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
-        blockExplorerUrls: ['https://testnet.bscscan.com/'],
-      },
-    ],
-  });
-};
-
 export const connectWeb3Modal = async () => {
   const web3Modal = new Web3Modal({
     cacheProvider: false, // optional
-    network: 'binance',
+    network: 'mainnet',
     providerOptions, // required
   });
-  //autoAddNetworkBSC();
   const provider = await web3Modal.connect();
   const web3 = new Web3(provider);
 
@@ -62,6 +32,7 @@ export const connectWeb3Modal = async () => {
 
   if (chainId === 4 || chainId === 97) {
     let accounts = await web3.eth.getAccounts();
+    console.log(accounts);
 
     if (accounts.length > 0) {
       return accounts[0];
